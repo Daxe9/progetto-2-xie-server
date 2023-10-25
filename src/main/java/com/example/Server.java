@@ -1,10 +1,13 @@
 package com.example;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
+import java.util.ArrayList;
 
 public class Server extends Thread {
     Socket connection;
@@ -12,11 +15,11 @@ public class Server extends Thread {
     DataOutputStream out;
     Integer randomNumber;
     Integer attempts = 1;
+    ArrayList<Socket> otherClients;
 
-    public Server(Socket newConnection) throws IOException {
-        // server = new ServerSocket(port);
-        // System.out.println("Server listening at port " + port);
+    public Server(Socket newConnection, ArrayList<Socket> otherClients) throws IOException {
         this.connection = newConnection;
+        this.otherClients = otherClients;
         in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         out = new DataOutputStream(connection.getOutputStream());
         randomNumber = (int) (Math.random() * 100 + 1);
@@ -48,5 +51,14 @@ public class Server extends Thread {
             System.err.println("FUCK");
             System.exit(1);
         }
+    }
+
+    public void endGame() throws IOException {
+        out.writeBytes("@\n");
+        for (Socket client : otherClients) {
+            DataOutputStream out = new DataOutputStream(client.getOutputStream());
+            out.writeBytes("@\n");
+        }
+        connection.close();
     }
 }
